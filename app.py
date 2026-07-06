@@ -6,7 +6,7 @@ import os
 # Настройки на страницата
 st.set_page_config(page_title="Офис Паркинг", page_icon="🚗", layout="centered")
 
-# Файл за съхранение на данните (локална псевдо-база данни)
+# Файл за съхранение на данните
 DATA_FILE = "parking_data.json"
 
 def load_data():
@@ -22,6 +22,28 @@ def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
+# Списък с официалните празници в България за 2026 г.
+def is_bulgarian_holiday(date):
+    holidays_2026 = {
+        datetime.date(2026, 1, 1),   # Нова година
+        datetime.date(2026, 3, 3),   # Ден на Освобождението
+        datetime.date(2026, 4, 10),  # Велики петък (Великден)
+        datetime.date(2026, 4, 11),  # Велика събота
+        datetime.date(2026, 4, 12),  # Великден
+        datetime.date(2026, 4, 13),  # Великден - понеделник
+        datetime.date(2026, 5, 1),   # Ден на труда
+        datetime.date(2026, 5, 6),   # Гергьовден
+        datetime.date(2026, 5, 24),  # Ден на светите братя Кирил и Методий
+        datetime.date(2026, 5, 25),  # Почивен ден за 24 май
+        datetime.date(2026, 9, 6),   # Съединението на България
+        datetime.date(2026, 9, 7),   # Почивен ден за 6 септември
+        datetime.date(2026, 9, 22),  # Ден на Независимостта
+        datetime.date(2026, 12, 24), # Бъдни вечер
+        datetime.date(2026, 12, 25), # Рождество Христово
+        datetime.date(2026, 12, 26), # Рождество Христово
+    }
+    return date in holidays_2026
+
 # Инициализация на данните
 data = load_data()
 
@@ -29,28 +51,29 @@ data = load_data()
 st.title("🚗 Офис Паркинг Места")
 st.markdown("Удобно и бързо запазване на паркоместа за екипа.")
 
-# Избор на дата (цялата работна седмица - 5 дни напред)
+# Генериране на 5 работни дни напред (пропускайки уикенди и BG празници)
 today = datetime.date.today()
-
 days_options = []
 days_mapping = {}
 
-# Генерираме 5 дни напред автоматично
-for i in range(5):
-    current_day = today + datetime.timedelta(days=i)
-    # Форматираме името на деня (напр. Днес, Утре или конкретна дата)
-    if i == 0:
-        label = f"Днес ({current_day.strftime('%d.%m')})"
-    elif i == 1:
-        label = f"Утре ({current_day.strftime('%d.%m')})"
-    else:
-        # Имената на дните от седмицата на български
-        bg_days = ["Пон", "Втор", "Сряд", "Четв", "Пет", "Съб", "Нед"]
-        day_name = bg_days[current_day.weekday()]
-        label = f"{day_name} ({current_day.strftime('%d.%m')})"
-        
-    days_options.append(label)
-    days_mapping[label] = str(current_day)
+current_date = today
+while len(days_options) < 5:
+    # Проверка дали денят е събота (5), неделя (6) или официален празник
+    if current_date.weekday() < 5 and not is_bulgarian_holiday(current_date):
+        # Форматиране на етикета
+        if current_date == today:
+            label = f"Днес ({current_date.strftime('%d.%m')})"
+        elif current_date == today + datetime.timedelta(days=1):
+            label = f"Утре ({current_date.strftime('%d.%m')})"
+        else:
+            bg_days = ["Пон", "Втор", "Сряд", "Четв", "Пет", "Съб", "Нед"]
+            day_name = bg_days[current_date.weekday()]
+            label = f"{day_name} ({current_date.strftime('%d.%m')})"
+            
+        days_options.append(label)
+        days_mapping[label] = str(current_date)
+    
+    current_date += datetime.timedelta(days=1)
 
 selected_date = st.radio("Изберете ден:", days_options, horizontal=True)
 
@@ -72,7 +95,7 @@ if slots_left > 0:
 else:
     st.error("🔴 ВСИЧКИ МЕСТА СА ЗАЕТИ!")
 
-# Показване на графични "кутийки" за заетите места
+# Показване на графични "кутийки"
 cols = st.columns(max_slots)
 for i in range(max_slots):
     with cols[i]:
@@ -108,7 +131,7 @@ if name:
 else:
     st.info("Моля, въведете името си горе, за да запазите или освободите място.")
 
-# Списък на записаните колеги за деня
+# Списък на записаните колеги
 if slots_taken > 0:
     st.markdown("### 📋 Списък на колегите с паркомясто:")
     for idx, player in enumerate(reserved_players, start=1):
