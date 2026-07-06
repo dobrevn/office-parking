@@ -29,13 +29,33 @@ data = load_data()
 st.title("🚗 Офис Паркинг Места")
 st.markdown("Удобно и бързо запазване на паркоместа за екипа.")
 
-# Избор на дата (ограничена до днес и утре за лесна ротация)
+# Избор на дата (цялата работна седмица - 5 дни напред)
 today = datetime.date.today()
-tomorrow = today + datetime.timedelta(days=1)
-selected_date = st.radio("Изберете ден:", [f"Днес ({today.strftime('%d.%m')})", f"Утре ({tomorrow.strftime('%d.%m')})"], horizontal=True)
+
+days_options = []
+days_mapping = {}
+
+# Генерираме 5 дни напред автоматично
+for i in range(5):
+    current_day = today + datetime.timedelta(days=i)
+    # Форматираме името на деня (напр. Днес, Утре или конкретна дата)
+    if i == 0:
+        label = f"Днес ({current_day.strftime('%d.%m')})"
+    elif i == 1:
+        label = f"Утре ({current_day.strftime('%d.%m')})"
+    else:
+        # Имената на дните от седмицата на български
+        bg_days = ["Пон", "Втор", "Сряд", "Четв", "Пет", "Съб", "Нед"]
+        day_name = bg_days[current_day.weekday()]
+        label = f"{day_name} ({current_day.strftime('%d.%m')})"
+        
+    days_options.append(label)
+    days_mapping[label] = str(current_day)
+
+selected_date = st.radio("Изберете ден:", days_options, horizontal=True)
 
 # Ключ за базата данни според избрания ден
-date_key = str(today) if "Днес" in selected_date else str(tomorrow)
+date_key = days_mapping[selected_date]
 
 if date_key not in data:
     data[date_key] = []
