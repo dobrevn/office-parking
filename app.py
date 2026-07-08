@@ -47,20 +47,29 @@ def is_bulgarian_holiday(date):
 # Инициализация на данните
 data = load_data()
 
+# АВТОМАТИЧНА КОРЕКЦИЯ: Прехвърляне на старите резервации от "Утре" към днешната реална дата
+today = datetime.date.today()
+today_str = str(today)
+
+if "Утре" in data and len(data["Утре"]) > 0:
+    # Ако за днешната дата няма нищо, прехвърляме хората от стария ключ "Утре"
+    if today_str not in data or len(data[today_str]) == 0:
+        data[today_str] = data["Утре"]
+    # Изтриваме стария ключ "Утре", за да не пречи повече
+    del data["Утре"]
+    save_data(data)
+
 # Заглавие на приложението
 st.title("🚗 Офис Паркинг Места")
 st.markdown("Удобно и бързо запазване на паркоместа за екипа.")
 
-# Генериране на 5 работни дни напред (пропускайки уикенди и BG празници)
-today = datetime.date.today()
+# Генериране на 5 работни дни напред
 days_options = []
 days_mapping = {}
 
 current_date = today
 while len(days_options) < 5:
-    # Проверка дали денят е събота (5), неделя (6) или официален празник
     if current_date.weekday() < 5 and not is_bulgarian_holiday(current_date):
-        # Форматиране на етикета
         if current_date == today:
             label = f"Днес ({current_date.strftime('%d.%m')})"
         elif current_date == today + datetime.timedelta(days=1):
@@ -106,8 +115,8 @@ for i in range(max_slots):
 
 st.markdown("---")
 
-# Форма за запазване / освобождаване
-st.subheader("Управление на твоята резервация")
+# ... (останалата част от формата си остава същата)
+st.subheader("Управление на твоята reservation")
 
 name = st.text_input("Въведи своето име (на кирилица):").strip()
 
@@ -131,7 +140,6 @@ if name:
 else:
     st.info("Моля, въведете името си горе, за да запазите или освободите място.")
 
-# Списък на записаните колеги
 if slots_taken > 0:
     st.markdown("### 📋 Списък на колегите с паркомясто:")
     for idx, player in enumerate(reserved_players, start=1):
