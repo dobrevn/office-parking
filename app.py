@@ -3,14 +3,14 @@ import datetime
 import json
 import os
 
-# 1. Луксозни настройки на страницата с тъмна/модерна тема
+# 1. Настройки на страницата с модерна тема
 st.set_page_config(
     page_title="Сердика Паркинг", 
     page_icon="🏎️", 
     layout="centered"
 )
 
-# Красив персонализиран CSS за луксозен дизайн и анимации
+# Персонализиран CSS за изчистен дизайн и анимации
 st.markdown("""
     <style>
     /* Премахване на стандартните полета за по-изчистен вид */
@@ -33,7 +33,7 @@ st.markdown("""
         margin-bottom: 2rem;
     }
     
-    /* Луксозни картички за паркоместата */
+    /* Картички за паркоместата */
     .parking-card {
         border-radius: 12px;
         padding: 20px 10px;
@@ -98,31 +98,28 @@ def is_bulgarian_holiday(date):
 data = load_data()
 today = datetime.date.today()
 
-# Модерно заглавие
+# Универсално и изчистено заглавие
 st.markdown("<h1 class='main-title'>🚗 SERDIKA PARKING</h1>", unsafe_allow_html=True)
-st.markdown("<p class='sub-title'>Премиум система за резервация на споделени паркоместа</p>", unsafe_allow_html=True)
+st.markdown("<p class='sub-title'>Система за резервация на паркоместа в офиса</p>", unsafe_allow_html=True)
 
-# Генериране на 5 работни дни
+# Генериране на 5 работни дни (само ден от седмицата и дата)
 days_options = []
 days_mapping = {}
 current_date = today
 
 while len(days_options) < 5:
     if current_date.weekday() < 5 and not is_bulgarian_holiday(current_date):
-        if current_date == today:
-            label = f"📅 Днес ({current_date.strftime('%d.%m')})"
-        elif current_date == today + datetime.timedelta(days=1):
-            label = f"🌅 Утре ({current_date.strftime('%d.%m')})"
-        else:
-            bg_days = ["Пон", "Втор", "Сряд", "Четв", "Пет", "Съб", "Нед"]
-            day_name = bg_days[current_date.weekday()]
-            label = f"{day_name} ({current_date.strftime('%d.%m')})"
+        bg_days = ["Пон", "Втор", "Сряд", "Четв", "Пет", "Съб", "Нед"]
+        day_name = bg_days[current_date.weekday()]
+        
+        # Унифициран етикет за всички дни без "Днес" и "Утре"
+        label = f"{day_name} ({current_date.strftime('%d.%m')})"
             
         days_options.append(label)
         days_mapping[label] = str(current_date)
     current_date += datetime.timedelta(days=1)
 
-# Интерактивен селектор за ден с по-изчистен вид
+# Интерактивен селектор за ден
 selected_date = st.radio("Изберете работен ден:", days_options, horizontal=True, label_visibility="collapsed")
 date_key = days_mapping[selected_date]
 
@@ -136,12 +133,12 @@ slots_left = max_slots - slots_taken
 
 st.markdown("---")
 
-# 2. Интерактивен Прогрес бар за заетост
+# Интерактивен Прогрес бар за заетост
 occupancy_percentage = (slots_taken / max_slots)
 st.markdown(f"**Заетост на паркинга:** {slots_taken} от {max_slots} места")
 st.progress(occupancy_percentage)
 
-# 3. Визуализация на луксозните картички
+# Визуализация на картичките
 cols = st.columns(max_slots)
 for i in range(max_slots):
     with cols[i]:
@@ -176,7 +173,7 @@ if name:
             st.rerun()
     else:
         if slots_left > 0:
-            if st.button("✨ Запази премиум място", type="primary", use_container_width=True):
+            if st.button("✨ Запази място", type="primary", use_container_width=True):
                 reserved_players.append(name)
                 data[date_key] = reserved_players
                 save_data(data)
@@ -186,7 +183,7 @@ if name:
 else:
     st.info("Въведете името си по-горе, за да отключите бутоните за запазване.")
 
-# Списък под формата на модерни баджове
+# Списък под формата на баджове
 if slots_taken > 0:
     st.markdown("### 📋 Екип с резервация за деня:")
     for idx, player in enumerate(reserved_players, start=1):
